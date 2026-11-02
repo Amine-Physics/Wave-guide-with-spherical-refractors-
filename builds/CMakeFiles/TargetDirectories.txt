@@ -1,0 +1,10 @@
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/main.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/run.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/debug.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/release.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/runclean.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/distclean.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/strip_comments.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/info.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/edit_cache.dir
+/home/amine/PhD_material/PhD_preparation/simulation_work/GW_with_refractor_2.0/builds/CMakeFiles/rebuild_cache.dir

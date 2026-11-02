@@ -1,0 +1,19 @@
+subsection Mesh & Geometry
+  set Max Cell Size         = 0.05
+  set Number Of Refinements = 2
+  set Wave Guide Corners    = -1.0 , 0.0, 1.0, 0.5
+end
+subsection OutPut
+  set OutPut File Name = solution
+end
+subsection Physics
+  set C           = 3e8
+  set Mode Number = 1
+  set Omega       = 3e9
+end
+subsection Refractors
+  set Centers x     = 0.5,-0.5
+  set Centers y     = 0.25,0.25
+  set Permitivities = 1.5,2.0
+  set Radii         = 0.1,0.1
+end
