@@ -9,7 +9,7 @@ end
 subsection Physics
   set C           = 3e8
   set Mode Number = 1
-  set Omega       = 3e9
+  set Omega       = 1.5e9
 end
 subsection PostProcessing
   set Computation Positions  = -0.95 , -0.25 , 0.25 ,  0.95

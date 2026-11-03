@@ -40,6 +40,15 @@ struct Integration {
 
 };
 
+struct ModeCoefficients {
+	unsigned int mode ; 
+	double beta ; 
+	std::complex<double>  A_left ; 
+	std::complex<double>  B_left ;   
+	std::complex<double>  A_right ; 
+	std::complex<double>  B_right ;   
+};
+
 template<int dim> 
 class PostProcessor {
 	public: 
@@ -49,6 +58,8 @@ class PostProcessor {
 	        std::vector<AmplitudeSample> modal_amplitude_point_list() const; 
 	        std::vector<IntensitySample> intensity_graph() const ; 
 	        std::vector<IntensitySample> intensity_point_list() const ;
+	       
+	        std::vector<ModeCoefficients> power_spectrum() const ;  
 	        
 	        ScatteringResults scattering_results()const ; 
 	        
@@ -64,6 +75,9 @@ class PostProcessor {
 	         
 	         std::vector<AmplitudeSample> modal_amplitude_list(const std::vector<double> &x_values)const ; // helper function that takes a list of points and computes the modal amplitude at each entry 
 	         std::vector<IntensitySample> intensity_list(const std::vector<double> &x_values)const ; // helper function that takes a list of points and computes the intensity at each entry
+	         
+	         ModeCoefficients transmission_reflection( const unsigned int mode) const ; //  helper function that computes the reflection and transmission coefficients for a given mode 
+	         
 };
 
 void get_integration_points_and_weights(const Parameters &p , Integration &inte);

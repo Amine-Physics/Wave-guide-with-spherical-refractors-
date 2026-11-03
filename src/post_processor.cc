@@ -41,6 +41,7 @@ void get_integration_points_and_weights(const Parameters &p , Integration &inte)
 
 
 
+
 /*-- Implementing the class PostProcessor --*/ 
 
 // constructor 
@@ -127,6 +128,79 @@ std::vector<IntensitySample> PostProcessor<dim>::intensity_list(const std::vecto
 
 } // intensity list
 
+// implementing helper function transmission_reflection 
+
+template<int dim> 
+ModeCoefficients PostProcessor<dim>::transmission_reflection( const unsigned int mode) const {
+	// compute beta
+	const double k_0 = param.omega / param.c ; // k_0 
+	const double cut_off = mode * numbers::PI / param.W ; // mode cut_off 
+	const double beta_2 = k_0 * k_0 - cut_off * cut_off ; // beta_square
+	
+	AssertThrow(beta_2 > 0 , ExcMessage("The mode: " + std::to_string(mode) + " is evanescant!")); 
+	double beta = std::sqrt(beta_2); // beta 
+	
+	//find the first and last planes incluing refractors
+	double ref_min = 0.5 * (param.x_min + param.x_max);
+	double ref_max = ref_min;
+	if (!param.refractors.empty()) {
+		ref_min = param.x_max;
+		ref_max = param.x_min;
+		for (const auto &r : param.refractors) {
+			ref_min = std::min(ref_min, r.cx - r.radius);
+			ref_max = std::max(ref_max, r.cx + r.radius);
+		}
+	}
+	
+	double gap_left = ref_min - param.x_min ; // gap between the input port and the first refractor 
+	double gap_right = param.x_max - ref_max ; // gap between the output port and the second refractor 
+	
+	double d = numbers::PI/(4.0 * beta); // distance seperating the two planes where the coefficient will be calculated 
+	
+	AssertThrow(gap_left > d , ExcMessage("Not enough room left for two planes at the input")); 
+	AssertThrow(gap_right > d , ExcMessage("Not enough room left for two planes at the output")); 
+	
+	double x_left_1 = param.x_min + 0.5 * (gap_left - d) ; // first plane at the left  
+	double x_left_2 = x_left_1 + d ;  // second plane at the left 
+	
+	double x_right_1 = param.x_max - 0.5 * (gap_right - d) ; // first plane at the right  
+	double x_right_2 = x_right_1 - d ; // second plane at the right 
+	
+	const std::complex<double> I (0.0 , 1.0) ; // the complex number i 
+	
+	// computing transmission and reflection at the input port  
+	std::complex<double> a_left_1 = modal_amplitude(x_left_1 , mode); 
+	std::complex<double> a_left_2 = modal_amplitude(x_left_2 , mode); 
+	
+	std::complex<double> em1 = std::exp(-I* beta * x_left_1), ep1 = std::exp(I * beta * x_left_1) ; 
+	std::complex<double> em2 = std::exp(-I * beta * x_left_2), ep2 = std:: exp(I * beta * x_left_2); 
+	
+	std::complex<double> det = em1 * ep2 - em2 * ep1 ; 
+	std::complex<double> A_left = (a_left_1 * ep2 - a_left_2 * ep1) / det ; 
+	std::complex<double> B_left = (a_left_2 * em1 - a_left_1 * em2) / det ; 
+	
+	
+	// computing transmisson and reflection and the output port 
+	
+	std::complex<double> a_right_1 = modal_amplitude(x_right_1 , mode); 
+	std::complex<double> a_right_2 = modal_amplitude(x_right_2 , mode); 
+	
+	std::complex<double> emr1 = std::exp(-I* beta * x_right_1), epr1 = std::exp(I * beta * x_right_1) ; 
+	std::complex<double> emr2 = std::exp(-I * beta * x_right_2), epr2 = std::exp(I * beta * x_right_2); 
+	
+	std::complex<double> detr = emr1 * epr2 - emr2 * epr1 ; 
+	std::complex<double> A_right = (a_right_1 * epr2 - a_right_2 * epr1) / detr ; 
+	std::complex<double> B_right = (a_right_2 * emr1 - a_right_1 * emr2) / detr ;
+	
+	
+	
+	ModeCoefficients result{mode , beta, A_left, B_left, A_right, B_right}; 
+	return result ; 
+	  
+} // transmission reflection 
+
+
+
 
 /*-- Implementing main funcitons --*/ 
 
@@ -166,56 +240,41 @@ std::vector<IntensitySample> PostProcessor<dim>::intensity_graph()const {
 template<int dim>
 ScatteringResults PostProcessor<dim>::scattering_results() const {
 
-	const double W       = param.y_max - param.y_min;
-	const double k0      = param.omega / param.c;
-	const double cutoff  = param.n * numbers::PI / W;
-	const double beta2   = k0 * k0 - cutoff * cutoff;
-	AssertThrow(beta2 > 0, ExcMessage("The mode is evanescent"));
-	const double beta = std::sqrt(beta2);
-
-	// x-extent of the refractors (guide midpoint if there are none)
-	double ref_min = 0.5 * (param.x_min + param.x_max);
-	double ref_max = ref_min;
-	if (!param.refractors.empty()) {
-		ref_min = param.x_max;
-		ref_max = param.x_min;
-		for (const auto &r : param.refractors) {
-			ref_min = std::min(ref_min, r.cx - r.radius);
-			ref_max = std::max(ref_max, r.cx + r.radius);
-		}
-	}
-
-	// two planes left of the refractors, a quarter guided wavelength apart
-	// (best conditioning for separating the e^{-i beta x} and e^{+i beta x} parts)
-	const double d   = numbers::PI / (4.0 * beta);
-	const double gap = ref_min - param.x_min;
-	AssertThrow(gap > d, ExcMessage("Not enough room left of the refractors for the two planes"));
-	const double x1      = param.x_min + 0.5 * (gap - d);
-	const double x2      = x1 + d;
-	const double x_right = 0.25 * (3*ref_max + param.x_max);
-
-	const std::complex<double> I(0.0, 1.0);
-	const std::complex<double> a1    = modal_amplitude(x1, param.n);
-	const std::complex<double> a2    = modal_amplitude(x2, param.n);
-	const std::complex<double> a_out = modal_amplitude(x_right, param.n);
-
-	// solve a_j = A e^{-i beta x_j} + B e^{+i beta x_j}, j = 1,2
-	const std::complex<double> em1 = std::exp(-I * beta * x1), ep1 = std::exp(I * beta * x1);
-	const std::complex<double> em2 = std::exp(-I * beta * x2), ep2 = std::exp(I * beta * x2);
-	const std::complex<double> det = em1 * ep2 - ep1 * em2;
-	const std::complex<double> A   = (a1 * ep2 - a2 * ep1) / det;   // incident
-	const std::complex<double> B   = (em1 * a2 - em2 * a1) / det;   // reflected
+	ModeCoefficients mode_coeff = transmission_reflection(param.n); 
 
 	ScatteringResults res;
-	res.r       = B / A;
-	res.t       = a_out * std::exp(I * beta * x_right) / A;
+	res.r       = mode_coeff.B_left / mode_coeff.A_left;
+	res.t       = mode_coeff.A_right / mode_coeff.A_left;
 	res.R       = std::norm(res.r);
 	res.T       = std::norm(res.t);
 	res.balance = res.R + res.T;
-	std::cout<<"Reflacted Wave Amplitudes: A = " << std::abs(A)  << ", B = " << std::abs(B) << std::endl;
-	std::cout<< "Error( |A| - sqrt(2/W)) = " << std::abs(A) - std::sqrt(2/W) << std::endl;
+	
+	std::cout<<"Incoming wave amplitudes: A_left " << std::abs(mode_coeff.A_left)  << ". Reflected wave amplitude = " << std::abs(mode_coeff.B_left) << std::endl;
 	return res;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // printintg intensity computatoin results 
 void write_intensity_csv(const std::vector<IntensitySample> &intensities , const std::string &output_file_name)  {
@@ -236,7 +295,7 @@ void write_intensity_csv(const std::vector<IntensitySample> &intensities , const
 
 }
 
-// printin amplitude results 
+// printing amplitude results 
 
 void write_amplitude_csv(const Parameters &p ,const std::vector<AmplitudeSample> &amplitudes , const std::string &output_file_name)  {
 	std::ofstream output(output_file_name); 
@@ -258,7 +317,7 @@ void write_amplitude_csv(const Parameters &p ,const std::vector<AmplitudeSample>
 
 }
 
-// print ScatteringResults 
+// printing Scattering Results 
 
 void write_scattering_results_csv (const ScatteringResults &res , const std::string &output_file_name)  {
 	
