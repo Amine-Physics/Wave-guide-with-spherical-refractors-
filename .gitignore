@@ -1,4 +1,4 @@
-build/
+builds/
 *.msh
 *.vtu
 *.h5
