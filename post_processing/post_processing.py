@@ -58,3 +58,61 @@ plt.close(fig_2)
 
 
 
+## ploting power spectrum 
+
+df_ps = pd.read_csv("../builds/power_spectrum.csv") 
+print(df_ps.columns.tolist())
+
+modes = df_ps["mode "].values
+quantities = [" R ", " T ", " port_ref_in ", " port_ref_out"]
+labels = ["R", "T", "port reflection (in)", "port reflection (out)"]
+
+n = len(quantities)
+width = 0.15                       # thin bars, so they look like sticks
+offsets = (np.arange(n) - (n - 1) / 2) * width * 1.3
+xpos = np.arange(len(modes))       # one slot per mode
+
+fig, ax = plt.subplots(figsize=(8, 5))
+for k, (q, lab) in enumerate(zip(quantities, labels)):
+    ax.bar(xpos + offsets[k], df_ps[q].values, width=width, label=lab)
+
+ax.set_xticks(xpos)
+ax.set_xticklabels([str(int(m)) for m in modes])
+ax.set_xlabel("Mode m")
+ax.set_ylabel("Power fraction")
+ax.legend()
+fig.tight_layout()
+fig.savefig("power_spectrum.png", dpi=200)
+plt.close(fig)
+
+## compute balance  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

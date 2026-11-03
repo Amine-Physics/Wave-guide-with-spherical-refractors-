@@ -201,7 +201,6 @@ ModeCoefficients PostProcessor<dim>::transmission_reflection( const unsigned int
 
 
 
-
 /*-- Implementing main funcitons --*/ 
 
 template<int dim> 
@@ -254,27 +253,43 @@ ScatteringResults PostProcessor<dim>::scattering_results() const {
 }
 
 
+template<int dim> 
+std::vector<PowerSample> PostProcessor<dim>:: power_spectrum() const {
+	
+	const double k_0 = param.omega / param.c ; 
+	const double cut_off = numbers::PI / param.W ; 
+	const double ratio = k_0 / cut_off ; 
+	
+	AssertThrow(ratio > 1 , ExcMessage("The wave number is below the cut off"));
+
+	const unsigned int max_mode = static_cast<unsigned int>(std::ceil(ratio)) - 1; 	
+	
+	ModeCoefficients incoming_wave = PostProcessor<dim>::transmission_reflection(param.n); 
+	double incoming_power = incoming_wave.beta * std::norm(incoming_wave.A_left);
+	
+	std::vector<PowerSample> power_spec ; 
+	
+	
+	
+	for (unsigned int m = 1 ; m <= max_mode ; ++m) {
+		ModeCoefficients mode_decom = PostProcessor<dim>::transmission_reflection(m); 
+		double R_power = mode_decom.beta * std::norm(mode_decom.B_left) / incoming_power ; 
+		double T_power = mode_decom.beta * std::norm(mode_decom.A_right) / incoming_power ; 
+		double port_ref_in = ((mode_decom.mode == param.n)? 0.0 : 1.0) *  mode_decom.beta * std::norm(mode_decom.A_left) / incoming_power ; 
+		double port_ref_out = mode_decom.beta * std::norm(mode_decom.B_right) / incoming_power; 
+		power_spec.push_back({mode_decom.mode , mode_decom.beta , R_power , T_power , port_ref_in , port_ref_out}); 
+	
+	}
+	
+	return power_spec ; 
+	
+	
+
+}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*---------------------------------------- Pringting Function --------------------------------------------------*/
 
 // printintg intensity computatoin results 
 void write_intensity_csv(const std::vector<IntensitySample> &intensities , const std::string &output_file_name)  {
@@ -333,6 +348,24 @@ void write_scattering_results_csv (const ScatteringResults &res , const std::str
 	output.close();
 
 } 
+
+// printing power spectrum 
+
+void write_power_spectrum_csv(const std::vector<PowerSample> &power_spec, const std::string &output_file_name) {
+
+	std::ofstream output(output_file_name); 
+	AssertThrow(output.is_open() , ExcMessage("Cannot open" + output_file_name));
+	output << std::setprecision(16); 
+	
+	output << "mode , beta , R , T , port_ref_in , port_ref_out" << std::endl;
+	
+	for(unsigned int m = 0 ; m < power_spec.size() ; ++m) {
+		output<< power_spec[m].mode << "," << power_spec[m].beta << "," << power_spec[m].R << "," 
+		<< power_spec[m].T << "," << power_spec[m].port_ref_in << "," << power_spec[m].port_ref_out << std::endl;
+	}
+	output.close();	
+
+}
 
 
 

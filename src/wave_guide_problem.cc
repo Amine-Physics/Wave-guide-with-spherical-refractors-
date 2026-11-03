@@ -305,11 +305,14 @@ void WaveGuideProblem<dim>:: output_postprocessing_results() const {
 	
 	ScatteringResults res = post_processor.scattering_results(); 
 	
+	std::vector<PowerSample> power_spec= post_processor.power_spectrum();
+	
 	std::string point_amplitude_file = "point_amplitude.csv" ; 
 	std::string graph_amplitude_file ="graph_amplitude.csv" ; 
 	std::string point_intensity_file ="point_intensity.csv" ; 
 	std::string graph_intensity_file ="graph_intensity.csv" ; 
 	std::string scattering_results_file = "scattering_results.csv" ; 
+	std::string power_spectrum_file = "power_spectrum.csv" ; 
 	
 	write_intensity_csv(point_intensities , point_intensity_file);
 	write_intensity_csv(graph_intensities , graph_intensity_file);
@@ -318,6 +321,8 @@ void WaveGuideProblem<dim>:: output_postprocessing_results() const {
 	write_amplitude_csv(param, graph_amplitudes , graph_amplitude_file);
 	
 	write_scattering_results_csv(res , scattering_results_file);
+	
+	write_power_spectrum_csv(power_spec , power_spectrum_file) ;
 	
 	timer.stop(); 
 	std::cout<< "done (" << timer.cpu_time() << "s )" << std::endl; 

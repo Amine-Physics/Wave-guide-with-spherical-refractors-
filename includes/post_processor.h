@@ -41,13 +41,20 @@ struct Integration {
 };
 
 struct ModeCoefficients {
-	unsigned int mode ; 
-	double beta ; 
-	std::complex<double>  A_left ; 
-	std::complex<double>  B_left ;   
-	std::complex<double>  A_right ; 
+	unsigned int mode ; // mode number 1,2 ..
+	double beta ; // propagation constant
+	std::complex<double>  A_left ; //mode coefficients computed at the input 
+	std::complex<double>  B_left ;  
+	std::complex<double>  A_right ; // mode coefficients computed at the output 
 	std::complex<double>  B_right ;   
 };
+
+struct PowerSample {
+	unsigned int mode ; // mode number 
+	double beta ; // propagation constant 
+	double R, T ; // Reflection and transmission coeff 
+	double port_ref_in , port_ref_out ; // reflected power at the input and output due to a mismach between the port boundary conditiion and the mode
+}; 
 
 template<int dim> 
 class PostProcessor {
@@ -59,7 +66,7 @@ class PostProcessor {
 	        std::vector<IntensitySample> intensity_graph() const ; 
 	        std::vector<IntensitySample> intensity_point_list() const ;
 	       
-	        std::vector<ModeCoefficients> power_spectrum() const ;  
+	        std::vector<PowerSample> power_spectrum() const ;  
 	        
 	        ScatteringResults scattering_results()const ; 
 	        
@@ -78,6 +85,7 @@ class PostProcessor {
 	         
 	         ModeCoefficients transmission_reflection( const unsigned int mode) const ; //  helper function that computes the reflection and transmission coefficients for a given mode 
 	         
+	         
 };
 
 void get_integration_points_and_weights(const Parameters &p , Integration &inte);
@@ -85,7 +93,7 @@ void get_integration_points_and_weights(const Parameters &p , Integration &inte)
 void write_intensity_csv(const std::vector<IntensitySample> &intensitues , const std::string &output_file_name); 
 void write_amplitude_csv(const Parameters &p, const std::vector<AmplitudeSample> &amplitudes , const std::string &output_file_name); 
 void write_scattering_results_csv(const ScatteringResults &res , const std::string &output_file_name); 
-
+void write_power_spectrum_csv(const std::vector<PowerSample> &power_spec, const std::string &output_file_name);
 
 
 
