@@ -63,27 +63,31 @@ The parameter file is read once into a plain `Parameters` struct (`read_paramete
 
 ```
 subsection Mesh & Geometry
-  set Number Of Refinements = 2
-  set Wave Guide Corners    = -1.0, 0.0, 1.0, 0.5   # x_min, y_min, x_max, y_max
   set Max Cell Size         = 0.05
+  set Number Of Refinements = 2
+  set Wave Guide Corners    = -1.0 , -0.5, 1.0, 0.5
 end
-
-subsection Refractors            # lists of equal length, one entry per refractor
-  set Centers x      = 0.0, 0.6
-  set Centers y      = 0.25, 0.25
-  set Radii          = 0.15, 0.10
-  set Permittivities = 1.5, 2.0
+subsection OutPut
+  set OutPut File Name = solution
 end
-
 subsection Physics
-  set Omega       = 3e9      # angular frequency in rad/s (f = omega / 2 pi)
   set C           = 3e8
   set Mode Number = 1
+  set Omega       = 1.5e9
+end
+subsection PostProcessing
+  set Computation Positions  = -0.95 , -0.25 , 0.25 ,  0.95
+  set Mode                   = 1
+  set Number Of Points       = 200
+  set Number Of Subdivisions = 50
+end
+subsection Refractors
+  set Centers x     = 0.25 , -0.25, 0.25 , -0.25 
+  set Centers y     = 0.25 , 0.25, -0.25 , -0.25
+  set Permitivities = 4.0 , 4.0, 4.0 , 4.0
+  set Radii         = 0.01, 0.01, 0.01 , 0.01
 end
 
-subsection Output
-  set Output File Name = solution
-end
 ```
 
 Post-processing options (number of quadrature subintervals, sampling points) are declared in the same file; see `parameters.cc`. Refractors must lie inside the guide and must not overlap; both are checked on reading.
@@ -100,7 +104,6 @@ The scripts in `post_processing/` read the CSV files and produce the amplitude, 
 
 ```
 CMakeLists.txt
-main.cc
 includes/          headers (Parameters, mesh builder, solver class, post-processor)
 src/               implementations
 tests/             standalone mesh test (Gmsh only)
@@ -122,12 +125,10 @@ post_processing/   Python plotting scripts
 
 ## Roadmap
 
-- Multimode port condition (Dirichlet-to-Neumann map over the propagating modes).
-- Convergence study and a comparison with a published waveguide benchmark.
-- Eigenvalue / quasi-normal-mode solves with PML or an equivalent open boundary.
-- Quality-factor tracking against a symmetry-breaking parameter, to locate symmetry-protected BICs.
-- Optional local mesh refinement near the refractors (through Gmsh size fields).
+- Adding option for frequency sweep to compute scattering matrix and identify poles. 
+- Reproducing literature results. Target : Bound States in the Continuum in Photonics by Marinica and al. 
+- Adding option for either entering a list of refractors or generating a periodic latice. Motivated by papers on BIC where they are identified in peiodic latice with defects. 
 
 ## Author
 
-Amine. Work in progress, developed as preparation for PhD research on electromagnetic simulation. License: to be decided.
+Mohamed Amine Ezzine. Preparation for PhD position at `Ecole Nationale de l'Aviation Civile`. 
